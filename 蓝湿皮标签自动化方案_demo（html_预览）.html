@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>蓝湿皮｜耐化学可移除标签＋机械固定（手机＋互动＋中英切换）</title>
+<style>
+  :root{
+    --bg:#0b0c0f; --panel:#12141a; --card:#171922; --muted:#9aa4b2;
+    --fg:#eef2f6; --acc:#67e8f9; --ok:#34d399; --warn:#f59e0b; --danger:#f43f5e;
+    --border:rgba(255,255,255,0.08); --shadow: 0 6px 24px rgba(0,0,0,.24);
+    --tap:56px; /* min touch target */
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f7fb; --panel:#ffffff; --card:#ffffff; --fg:#0f172a; --muted:#475569; --border:rgba(15,23,42,0.08); --shadow:0 6px 24px rgba(2,6,23,.08) }
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent }
+  html,body{ height:100% }
+  body{
+    margin:0; font: 16px/1.6 ui-sans-serif, system-ui, -apple-system,"Segoe UI","Roboto","Helvetica Neue",Arial,"Noto Sans","PingFang SC","Hiragino Sans GB","Microsoft YaHei","WenQuanYi Micro Hei",sans-serif;
+    color:var(--fg); background:radial-gradient(1200px 600px at 20% -10%, rgba(103,232,249,0.14), transparent 60%), var(--bg);
+  }
+  .wrap{ max-width:960px; margin:0 auto; padding:16px 12px 100px }
+  header{
+    position:sticky; top:0; z-index:10; background:linear-gradient(180deg, rgba(11,12,15,.85), rgba(11,12,15,.65) 60%, transparent);
+    backdrop-filter: blur(8px);
+    padding:14px 8px 8px; margin: -16px -12px 8px; border-bottom:1px solid var(--border);
+  }
+  h1{ margin:0 0 4px; font-size:clamp(18px,4.6vw,26px); letter-spacing:.2px }
+  .sub{ color:var(--muted); margin:0; font-size:clamp(12px,3.4vw,14px) }
+  .chips{ display:flex; gap:8px; overflow:auto; padding:8px 4px 0; -webkit-overflow-scrolling: touch }
+  .chip{ flex:0 0 auto; border:1px solid var(--border); color:var(--muted); padding:6px 10px; border-radius:999px; font-size:12px }
+
+  section{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px; margin-top:12px; box-shadow: var(--shadow) }
+  h2{ margin:0 0 8px; font-size:18px }
+  .muted{ color:var(--muted) }
+  .row{ display:flex; gap:10px; flex-wrap:wrap }
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; height:var(--tap); padding:0 14px; border-radius:12px; border:1px solid var(--border); background:var(--card); color:var(--fg); text-decoration:none; min-width:44px }
+  .btn:active{ transform: translateY(1px) }
+  .seg{ display:flex; border:1px solid var(--border); border-radius:12px; overflow:hidden }
+  .seg button{ flex:1; background:transparent; color:var(--muted); border:0; height:var(--tap) }
+  .seg button.active{ background:var(--card); color:var(--fg); font-weight:600 }
+
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px }
+  .tag{ display:inline-block; padding:2px 8px; margin:6px 6px 0 0; border:1px solid var(--border); border-radius:8px; color:var(--muted); font-size:12px }
+  .kpi{ display:flex; align-items:baseline; gap:8px; padding:8px 10px; border-radius:12px; background:var(--card); border:1px solid var(--border) }
+  .kpi strong{ font-size:22px }
+  .ok{ color:var(--ok) } .warn{ color:var(--warn) } .danger{ color:var(--danger) }
+
+  details{ border:1px solid var(--border); border-radius:12px; background:var(--card); padding:10px; margin:8px 0 }
+  details > summary{ cursor:pointer; list-style:none; outline:none; font-weight:600 }
+  details > summary::-webkit-details-marker{ display:none }
+
+  .nav{ position:fixed; left:0; right:0; bottom:0; height:64px; background:var(--panel); border-top:1px solid var(--border); display:flex; z-index:20 }
+  .nav a{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); text-decoration:none; gap:4px; font-size:12px }
+  .nav a.active{ color:var(--acc) }
+
+  input[type="number"], input[type="text"]{ background:var(--panel); color:var(--fg); border:1px solid var(--border); border-radius:10px; height:44px; padding:0 10px; width:120px }
+  input[type="range"]{ width:100% }
+  label{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:8px 0 }
+  .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace }
+
+  .hscroll{ display:flex; gap:10px; overflow:auto; scroll-snap-type:x mandatory; padding-bottom:4px }
+  .hscroll > *{ scroll-snap-align:start; min-width:240px }
+
+  .float-print{ position:fixed; right:12px; bottom:80px; z-index:30 }
+
+  /* language visibility */
+  [data-lang] { display:none }
+  [data-lang].active { display:block }
+
+  /* BOM table */
+  .bom { width:100%; border-collapse: collapse; }
+  .bom th,.bom td{ border:1px solid var(--border); padding:8px; text-align:left; font-size:14px }
+  .bom input[type="number"]{ width:80px }
+  .bom tfoot td{ font-weight:700 }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div>
+          <h1 id="title">蓝湿皮｜耐化学可移除标签＋机械固定</h1>
+          <p class="sub" id="subtitle">Mobile-first interactive sheet · Variable QR via thermal-transfer tag · Scan to MES</p>
+        </div>
+        <div class="seg" role="tablist" aria-label="language">
+          <button id="langZh" role="tab" aria-selected="true" class="active">中文</button>
+          <button id="langEn" role="tab" aria-selected="false">EN</button>
+        </div>
+      </div>
+      <div class="chips" aria-label="highlights">
+        <div class="chip" data-i18n="chip1">Tyvek/PP 合成纸 · 树脂碳带</div>
+        <div class="chip" data-i18n="chip2">塑料T钉/箭扣</div>
+        <div class="chip" data-i18n="chip3">首读≥99.5%</div>
+        <div class="chip" data-i18n="chip4">304/316 可选</div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <a class="btn" id="btnMore">阅读全文</a>
+      </div>
+    </header>
+
+    <!-- Chinese content -->
+    <div data-lang="zh" class="active">
+      <section id="mode">
+        <h2>模式选择</h2>
+        <div class="seg" role="tablist" aria-label="mode">
+          <button id="mSemi" role="tab" aria-selected="true" class="active">半自动</button>
+          <button id="mFull" role="tab" aria-selected="false">全自动</button>
+        </div>
+        <div class="hscroll" style="margin-top:10px">
+          <div class="kpi"><strong id="kpiCt">≤3.5 s/张</strong><span class="muted">目标节拍</span></div>
+          <div class="kpi"><strong id="kpiTPH">≈ 1,000 张/小时</strong><span class="muted">典型单工位（首读折算）</span></div>
+          <div class="kpi"><strong>≥99.5%</strong><span class="muted">二维码首读率</span></div>
+        </div>
+        <p class="muted" id="modeNote">建议从半自动起步：打印/取贴/穿扣/扫码分步协作，后续可平滑升级到全自动。</p>
+      </section>
+
+      <section id="flow">
+        <h2>流程与单元</h2>
+        <details open>
+          <summary>A. 打印/出标</summary>
+          <div class="card">
+            <ul>
+              <li>工业热转印（300/600 dpi，树脂带），剥离板＋到位光电</li>
+              <li>模板含短ID/二维码（V1/V2）</li>
+            </ul>
+          </div>
+        </details>
+        <details>
+          <summary>B. 取标/贴合</summary>
+          <div class="card"><ul>
+            <li>真空吸盘/海绵垫，必要时“只冲标签”预冲针</li>
+          </ul></div>
+        </details>
+        <details>
+          <summary>C. 穿孔＋上扣</summary>
+          <div class="card"><ul>
+            <li>伺服Z（0.4–1.0 kN峰值）＋力传感；气动T钉枪</li>
+            <li>UHMW-PE 快换砧块；回弹量监控</li>
+          </ul></div>
+        </details>
+        <details>
+          <summary>D. 扫码/MES</summary>
+          <div class="card"><ul>
+            <li>固定式2D扫码器，首读≥99.5%；NG 重打或旁路</li>
+            <li>MES 写入 Piece-ID、时间、坐标、班次等</li>
+          </ul></div>
+        </details>
+        <details id="moreZh" style="display:none">
+          <summary>更多（环境/材料/安全）</summary>
+          <div class="card"><ul>
+            <li>304 不锈钢机架，腐蚀区可选 316；电气IP54</li>
+            <li>固定点距皮边 ≥15–20 mm；禁用金属订书钉</li>
+            <li>断点缓存、事件日志与追溯字段</li>
+          </ul></div>
+        </details>
+      </section>
+
+      <section id="calc">
+        <h2>产能计算器</h2>
+        <div class="card">
+          <label>节拍（秒/张）<input id="ct" type="number" step="0.1" min="1" value="3.0" class="mono"></label>
+          <input id="ctR" type="range" min="1" max="6" step="0.1" value="3.0" aria-label="节拍滑块" />
+          <label>工位数量<input id="st" type="number" step="1" min="1" value="1" class="mono"></label>
+          <input id="stR" type="range" min="1" max="8" step="1" value="1" aria-label="工位滑块" />
+          <label>首读率（0–1）<input id="fp" type="number" step="0.01" min="0.9" max="1" value="0.995" class="mono"></label>
+          <input id="fpR" type="range" min="0.9" max="1" step="0.005" value="0.995" aria-label="首读率滑块" />
+          <label>目标产能（张/小时）<input id="target" type="number" min="100" step="50" value="800" class="mono"></label>
+          <div class="row" style="margin-top:8px">
+            <a class="btn" id="btnCalc">计算</a>
+            <a class="btn" id="btnReset">重置</a>
+          </div>
+          <div id="out" class="muted mono" style="margin-top:8px"></div>
+        </div>
+      </section>
+
+      <section id="bom">
+        <h2>BOM 勾选清单</h2>
+        <div class="card">
+          <div class="row">
+            <a class="btn" id="bomAll">全选</a>
+            <a class="btn" id="bomNone">清空</a>
+            <a class="btn" id="bomCopy">复制清单</a>
+          </div>
+          <div style="overflow:auto;margin-top:8px">
+            <table class="bom" id="bomTable" aria-label="BOM">
+              <thead>
+                <tr><th>选</th><th>物料</th><th>规格</th><th>数量</th><th>单价(可填)</th><th>小计</th></tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot>
+                <tr><td colspan="5">合计</td><td id="bomTotal">0</td></tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="accept">
+        <h2>验收与要点</h2>
+        <div class="card">
+          <ul>
+            <li>连续抽样 ≥1000 张，二维码首次识读率 ≥99.5%，累计 ≥99.9%</li>
+            <li>8 小时稳定运行无中断；日志完整</li>
+            <li>湿态拉脱力 ≥20 N；标签/扣 100% 可回收</li>
+            <li>固定点距皮边 ≥15–20 mm；禁止金属订书钉</li>
+          </ul>
+          <div class="row">
+            <a class="btn" id="btnPrint">打印/导出</a>
+            <a class="btn" id="btnCopyRFQ">复制询价要点</a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- English content -->
+    <div data-lang="en">
+      <section id="mode_en">
+        <h2>Mode</h2>
+        <div class="seg" role="tablist" aria-label="mode">
+          <button id="mSemi_en" role="tab" aria-selected="true" class="active">Semi-auto</button>
+          <button id="mFull_en" role="tab" aria-selected="false">Full-auto</button>
+        </div>
+        <div class="hscroll" style="margin-top:10px">
+          <div class="kpi"><strong id="kpiCt_en">≤3.5 s/pc</strong><span class="muted">Target takt</span></div>
+          <div class="kpi"><strong id="kpiTPH_en">≈ 1,000 pcs/h</strong><span class="muted">Typical per station (FPY)</span></div>
+          <div class="kpi"><strong>≥99.5%</strong><span class="muted">First-pass decode</span></div>
+        </div>
+        <p class="muted" id="modeNote_en">Start with semi-auto: print / pick & place / pierce & tag / scan. Upgradeable to full-auto.</p>
+      </section>
+
+      <section id="flow_en">
+        <h2>Flow & Units</h2>
+        <details open>
+          <summary>A. Print / dispense</summary>
+          <div class="card"><ul>
+            <li>Industrial TT (300/600 dpi, resin ribbon), peel plate + sensor</li>
+            <li>Template with short ID & QR (V1/V2)</li>
+          </ul></div>
+        </details>
+        <details>
+          <summary>B. Pick & place</summary>
+          <div class="card"><ul>
+            <li>Vacuum pad / sponge; optional tag-only pre-punch</li>
+          </ul></div>
+        </details>
+        <details>
+          <summary>C. Pierce & fasten</summary>
+          <div class="card"><ul>
+            <li>Servo-Z (0.4–1.0 kN peak) + force; pneumatic T-tag gun</li>
+            <li>UHMW-PE anvil; rebound monitoring</li>
+          </ul></div>
+        </details>
+        <details>
+          <summary>D. Scan / MES</summary>
+          <div class="card"><ul>
+            <li>Fixed 2D reader, ≥99.5% first-pass; NG reprint / bypass</li>
+            <li>MES log: Piece-ID, time, XY, shift</li>
+          </ul></div>
+        </details>
+        <details id="moreEn" style="display:none">
+          <summary>More (materials / safety)</summary>
+          <div class="card"><ul>
+            <li>Frame SS304 (SS316 optional); IP54 electrical</li>
+            <li>Fasten ≥15–20 mm from leather edge; no metal staples</li>
+            <li>Offline queue & event logs</li>
+          </ul></div>
+        </details>
+      </section>
+
+      <section id="calc_en">
+        <h2>Capacity Calculator</h2>
+        <div class="card">
+          <label>Takt (s/pc)<input id="ct_en" type="number" step="0.1" min="1" value="3.0" class="mono"></label>
+          <input id="ctR_en" type="range" min="1" max="6" step="0.1" value="3.0" aria-label="takt slider" />
+          <label>Stations<input id="st_en" type="number" step="1" min="1" value="1" class="mono"></label>
+          <input id="stR_en" type="range" min="1" max="8" step="1" value="1" aria-label="stations slider" />
+          <label>FPY (0–1)<input id="fp_en" type="number" step="0.01" min="0.9" max="1" value="0.995" class="mono"></label>
+          <input id="fpR_en" type="range" min="0.9" max="1" step="0.005" value="0.995" aria-label="fpy slider" />
+          <label>Target (pcs/h)<input id="target_en" type="number" min="100" step="50" value="800" class="mono"></label>
+          <div class="row" style="margin-top:8px">
+            <a class="btn" id="btnCalc_en">Calculate</a>
+            <a class="btn" id="btnReset_en">Reset</a>
+          </div>
+          <div id="out_en" class="muted mono" style="margin-top:8px"></div>
+        </div>
+      </section>
+
+      <section id="bom_en">
+        <h2>BOM Checklist</h2>
+        <div class="card">
+          <div class="row">
+            <a class="btn" id="bomAll_en">Select all</a>
+            <a class="btn" id="bomNone_en">Clear</a>
+            <a class="btn" id="bomCopy_en">Copy list</a>
+          </div>
+          <div style="overflow:auto;margin-top:8px">
+            <table class="bom" id="bomTable_en" aria-label="BOM">
+              <thead>
+                <tr><th>Pick</th><th>Item</th><th>Spec</th><th>Qty</th><th>Unit (opt.)</th><th>Subtotal</th></tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot>
+                <tr><td colspan="5">Total</td><td id="bomTotal_en">0</td></tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="accept_en">
+        <h2>Acceptance</h2>
+        <div class="card"><ul>
+          <li>Sample ≥1000 tags; first-pass ≥99.5%, cumulative ≥99.9%</li>
+          <li>8h continuous run; full logs</li>
+          <li>Wet pull-off ≥20 N; 100% tag/fastener recovery</li>
+          <li>Fasten ≥15–20 mm from edge; no metal staples</li>
+        </ul>
+        <div class="row">
+          <a class="btn" id="btnPrint_en">Print/Export</a>
+          <a class="btn" id="btnCopyRFQ_en">Copy RFQ points</a>
+        </div>
+        </div>
+      </section>
+    </div>
+
+    <a class="btn float-print" id="btnTop">↑ 顶部 / Top</a>
+  </div>
+
+  <nav class="nav" role="navigation" aria-label="Bottom">
+    <a href="#mode" class="active" id="nvMode">模式 / Mode</a>
+    <a href="#calc" id="nvCalc">计算 / Calc</a>
+    <a href="#accept" id="nvAcc">验收 / Accept</a>
+  </nav>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const $$ = s => document.querySelectorAll(s);
+  const store = JSON.parse(localStorage.getItem('wb_tag_cfg_v2')||'{}');
+
+  // language toggle
+  const langZh = $('#langZh');
+  const langEn = $('#langEn');
+  const zh = document.querySelector('[data-lang="zh"]');
+  const en = document.querySelector('[data-lang="en"]');
+  const title = $('#title');
+  const subtitle = $('#subtitle');
+  const chips = {
+    chip1: $('[data-i18n="chip1"]'), chip2:$('[data-i18n="chip2"]'), chip3:$('[data-i18n="chip3"]'), chip4:$('[data-i18n="chip4"]')
+  };
+  const dict = {
+    zh:{
+      title:'蓝湿皮｜耐化学可移除标签＋机械固定',
+      subtitle:'手机优先交互页 · 热转印变量码 · 扫码入 MES',
+      chips:['Tyvek/PP 合成纸 · 树脂碳带','塑料T钉/箭扣','首读≥99.5%','304/316 可选'],
+      moreBtn:['阅读全文','收起']
+    },
+    en:{
+      title:'Wet-blue · Chemical-resistant removable tagging with non-metal fasteners',
+      subtitle:'Mobile-first interactive sheet · Variable data via thermal-transfer · Scan to MES',
+      chips:['Tyvek/PP + resin ribbon','Plastic T-tag/arrow fastener','≥99.5% first-pass','SS304/SS316'],
+      moreBtn:['Read more','Collapse']
+    }
+  };
+  function applyLang(l){
+    const d = dict[l];
+    title.textContent = d.title; subtitle.textContent = d.subtitle;
+    [chips.chip1, chips.chip2, chips.chip3, chips.chip4].forEach((el,i)=> el.textContent = d.chips[i]);
+    zh.classList.toggle('active', l==='zh'); en.classList.toggle('active', l==='en');
+    langZh.classList.toggle('active', l==='zh'); langZh.setAttribute('aria-selected', l==='zh');
+    langEn.classList.toggle('active', l==='en'); langEn.setAttribute('aria-selected', l==='en');
+    document.body.setAttribute('lang', l==='zh'?'zh-CN':'en');
+    localStorage.setItem('wb_lang', l);
+    // update read more button label per state
+    const open = moreOpen;
+    $('#btnMore').textContent = open ? d.moreBtn[1] : d.moreBtn[0];
+  }
+  langZh.addEventListener('click', ()=>applyLang('zh'));
+  langEn.addEventListener('click', ()=>applyLang('en'));
+  applyLang(localStorage.getItem('wb_lang')||'zh');
+
+  // read more toggle
+  let moreOpen = false;
+  const moreZh = $('#moreZh');
+  const moreEn = $('#moreEn');
+  $('#btnMore').addEventListener('click', ()=>{
+    moreOpen = !moreOpen;
+    moreZh.style.display = moreOpen?'block':'none';
+    moreEn.style.display = moreOpen?'block':'none';
+    const l = localStorage.getItem('wb_lang')||'zh';
+    $('#btnMore').textContent = dict[l].moreBtn[ moreOpen?1:0 ];
+  });
+
+  // Mode and calculator (ZH)
+  const semi = $('#mSemi');
+  const full = $('#mFull');
+  const kpiCt = $('#kpiCt');
+  const kpiTPH = $('#kpiTPH');
+  const modeNote = $('#modeNote');
+  const ct = $('#ct'), ctR = $('#ctR');
+  const stN = $('#st'), stR = $('#stR');
+  const fp = $('#fp'), fpR = $('#fpR');
+  const target = $('#target');
+  const out = $('#out');
+
+  function syncRange(num, rng){ rng.value = num.value; }
+  function syncNumber(rng, num){ num.value = rng.value; }
+  [ [ct,ctR], [stN,stR], [fp,fpR] ].forEach(([n,r])=>{
+    n.addEventListener('input', ()=>{syncRange(n,r); calc();});
+    r.addEventListener('input', ()=>{syncNumber(r,n); calc();});
+  });
+
+  function applyMode(m){
+    if(m==='full'){
+      full.classList.add('active'); full.setAttribute('aria-selected','true');
+      semi.classList.remove('active'); semi.setAttribute('aria-selected','false');
+      ct.value = ctR.value = 4.5; stN.value = stR.value = 1; fp.value = fpR.value = 0.995;
+      kpiCt.textContent = '≤5.0 s/张';
+      kpiTPH.textContent = '≈ 700–1,000 张/小时';
+      modeNote.textContent = '全自动：视觉对位＋XY/机械臂，上扣稳定性更好；产能取决于皮张尺寸与对位距离。';
+      store.mode='full';
+    }else{
+      semi.classList.add('active'); semi.setAttribute('aria-selected','true');
+      full.classList.remove('active'); full.setAttribute('aria-selected','false');
+      ct.value = ctR.value = 3.0; stN.value = stR.value = 1; fp.value = fpR.value = 0.995;
+      kpiCt.textContent = '≤3.5 s/张';
+      kpiTPH.textContent = '≈ 900–1,100 张/小时';
+      modeNote.textContent = '半自动：打印/取贴/穿扣/扫码分步协作，设备成本低，上手快。';
+      store.mode='semi';
+    }
+    calc();
+    localStorage.setItem('wb_tag_cfg_v2', JSON.stringify({mode: store.mode, ct:ct.value, st:stN.value, fp:fp.value, target:target.value}));
+  }
+
+  function calc(){
+    const c = Math.max(0.5, parseFloat(ct.value)||3);
+    const s = Math.max(1, parseInt(stN.value)||1);
+    const f = Math.min(1, Math.max(0, parseFloat(fp.value)||0.995));
+    const tph = Math.floor(3600/c*s*f);
+    const tgt = Math.max(100, parseInt(target.value)||800);
+    const need = Math.ceil(tgt / Math.max(1, Math.floor(3600/c*f)));
+    out.textContent = `≈ ${tph.toLocaleString()} 张/小时；为达成 ${tgt.toLocaleString()} 张/小时，建议工位数：${need}`;
+    localStorage.setItem('wb_tag_cfg_v2', JSON.stringify({mode: store.mode||'semi', ct:ct.value, st:stN.value, fp:fp.value, target:target.value}));
+  }
+  $('#btnCalc').addEventListener('click', calc);
+  $('#btnReset').addEventListener('click', ()=>{ applyMode(store.mode||'semi'); });
+
+  // restore
+  if(store && (store.mode==='full' || store.mode==='semi')){
+    ct.value = store.ct||ct.value; ctR.value = ct.value;
+    stN.value = store.st||stN.value; stR.value = stN.value;
+    fp.value = store.fp||fp.value; fpR.value = fp.value;
+    target.value = store.target||target.value;
+    applyMode(store.mode);
+  }else{
+    applyMode('semi');
+  }
+
+  // Mode & calc (EN) reuse same values but independent UI
+  function bindCalcEN(){
+    const ctE=$('#ct_en'), ctRE=$('#ctR_en');
+    const stE=$('#st_en'), stRE=$('#stR_en');
+    const fpE=$('#fp_en'), fpRE=$('#fpR_en');
+    const tgtE=$('#target_en');
+    const outE=$('#out_en');
+    function sync(num,rng){ rng.value=num.value; }
+    function syncR(rng,num){ num.value=rng.value; }
+    [[ctE,ctRE],[stE,stRE],[fpE,fpRE]].forEach(([n,r])=>{
+      n.addEventListener('input',()=>{sync(n,r); calcE();});
+      r.addEventListener('input',()=>{syncR(r,n); calcE();});
+    });
+    function calcE(){
+      const c=Math.max(0.5,parseFloat(ctE.value)||3);
+      const s=Math.max(1,parseInt(stE.value)||1);
+      const f=Math.min(1,Math.max(0,parseFloat(fpE.value)||0.995));
+      const tph=Math.floor(3600/c*s*f);
+      const tgt=Math.max(100,parseInt(tgtE.value)||800);
+      const need=Math.ceil(tgt/Math.max(1,Math.floor(3600/c*f)));
+      outE.textContent=`≈ ${tph.toLocaleString()} pcs/h; To reach ${tgt.toLocaleString()} pcs/h need stations: ${need}`;
+    }
+    $('#btnCalc_en').addEventListener('click', calcE);
+    $('#btnReset_en').addEventListener('click', ()=>{ ctE.value=3; ctRE.value=3; stE.value=1; stRE.value=1; fpE.value=0.995; fpRE.value=0.995; tgtE.value=800; calcE(); });
+    calcE();
+  }
+  bindCalcEN();
+
+  // BOM data (shared)
+  const bomItems = [
+    {id:'printer', zh:'工业热转印打印机', en:'Industrial thermal transfer printer', spec:'300/600 dpi，剥离板+到位光电'},
+    {id:'resin', zh:'树脂碳带', en:'Resin ribbon', spec:'1 卷≈300 m'},
+    {id:'labels', zh:'Tyvek/PP 标签', en:'Tyvek/PP labels', spec:'80×50 mm，圆角≥3 mm'},
+    {id:'ttgun', zh:'气动 T 钉枪一体头', en:'Pneumatic T-tag gun head', spec:'带供料盒'},
+    {id:'servoZ', zh:'伺服 Z 轴 + 力传感', en:'Servo Z-axis + force sensor', spec:'0.4–1.0 kN 峰值'},
+    {id:'anvil', zh:'UHMW-PE 砧块', en:'UHMW-PE anvil block', spec:'快换'},
+    {id:'scanner', zh:'固定式 2D 扫码器', en:'Fixed 2D code reader', spec:'IP65'},
+    {id:'plc', zh:'PLC + HMI 控制', en:'PLC + HMI control', spec:'以太网 / REST/MQTT'},
+    {id:'frame', zh:'304 不锈钢机架', en:'SS304 frame', spec:'316 可选'},
+    {id:'safety', zh:'安全件（光幕/急停）', en:'Safety (light curtain/E-stop)', spec:'CE 互锁'}
+  ];
+
+  function renderBOM(tableId, lang){
+    const tbody = document.querySelector(tableId+' tbody');
+    tbody.innerHTML = '';
+    bomItems.forEach((it,i)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="checkbox" class="bpick"></td>
+        <td>${lang==='zh'?it.zh:it.en}</td>
+        <td>${it.spec}</td>
+        <td><input type="number" class="bqty" value="1" min="0"></td>
+        <td><input type="number" class="bunit" placeholder="0"></td>
+        <td class="bsub">0</td>`;
+      tbody.appendChild(tr);
+    });
+
+    function recalc(){
+      let total=0; tbody.querySelectorAll('tr').forEach(tr=>{
+        const pick=tr.querySelector('.bpick').checked;
+        const qty=parseFloat(tr.querySelector('.bqty').value)||0;
+        const unit=parseFloat(tr.querySelector('.bunit').value)||0;
+        const sub = pick? qty*unit : 0;
+        tr.querySelector('.bsub').textContent = sub? sub.toLocaleString(): '0';
+        total += sub;
+      });
+      const totalCell = document.querySelector(lang==='zh'? '#bomTotal' : '#bomTotal_en');
+      totalCell.textContent = total? total.toLocaleString() : '0';
+    }
+
+    tbody.addEventListener('input', recalc);
+    recalc();
+  }
+
+  renderBOM('#bomTable','zh');
+  renderBOM('#bomTable_en','en');
+
+  function bomActions(prefix, lang){
+    const table = document.querySelector(prefix);
+    const allBtn = document.querySelector(lang==='zh'? '#bomAll' : '#bomAll_en');
+    const noneBtn = document.querySelector(lang==='zh'? '#bomNone' : '#bomNone_en');
+    const copyBtn = document.querySelector(lang==='zh'? '#bomCopy' : '#bomCopy_en');
+    const totalCell = document.querySelector(lang==='zh'? '#bomTotal' : '#bomTotal_en');
+
+    allBtn.addEventListener('click', ()=>{ table.querySelectorAll('.bpick').forEach(cb=>cb.checked=true); table.dispatchEvent(new Event('input',{bubbles:true})); });
+    noneBtn.addEventListener('click', ()=>{ table.querySelectorAll('.bpick').forEach(cb=>cb.checked=false); table.dispatchEvent(new Event('input',{bubbles:true})); });
+    copyBtn.addEventListener('click', ()=>{
+      const lines = []; table.querySelectorAll('tbody tr').forEach(tr=>{
+        const pick = tr.querySelector('.bpick').checked; if(!pick) return;
+        const name = tr.children[1].textContent.trim();
+        const spec = tr.children[2].textContent.trim();
+        const qty = tr.querySelector('.bqty').value;
+        const unit = tr.querySelector('.bunit').value||'-';
+        const sub = tr.querySelector('.bsub').textContent;
+        lines.push(`${name} | ${spec} | Qty ${qty} | Unit ${unit} | Sub ${sub}`);
+      });
+      const msg = (lang==='zh'? 'BOM 勾选清单\n' : 'BOM Checklist\n') + lines.join('\n') + `\n${lang==='zh'?'合计':'Total'}: ${totalCell.textContent}`;
+      navigator.clipboard?.writeText(msg).then(()=> alert(lang==='zh'? '已复制清单' : 'Copied'));
+    });
+  }
+  bomActions('#bomTable','zh');
+  bomActions('#bomTable_en','en');
+
+  // Bottom nav active state
+  const sections = [ ['#mode','#nvMode'], ['#calc','#nvCalc'], ['#accept','#nvAcc'] ];
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const id = '#'+e.target.id; sections.forEach(([sid, aid])=>$(aid).classList.toggle('active', sid===id));
+      }
+    });
+  },{root:null, rootMargin:'-40% 0px -56% 0px', threshold:0});
+  sections.forEach(([sid])=>{ const el=$(sid); if(el) obs.observe(el); });
+
+  // Buttons common
+  $('#btnTop').addEventListener('click', ()=>window.scrollTo({top:0, behavior:'smooth'}));
+  $('#btnPrint').addEventListener('click', ()=>window.print());
+  $('#btnCopyRFQ').addEventListener('click', ()=>{
+    const msg = `Request: Wet-blue tagging station (chemical-resistant removable tags + plastic fastener)\n- Mode: ${store.mode||'semi'}\n- Takt: ${($('#ct').value)}s/pc, Stations: ${($('#st').value)}, First-pass: ${($('#fp').value)}\n- MES: REST/MQTT, log Piece-ID/time/position/result\nPlease quote printer + fastener head + vision scanner + PLC/HMI.`;
+    navigator.clipboard?.writeText(msg).then(()=> alert('已复制：询价要点'));
+  });
+
+  $('#btnPrint_en').addEventListener('click', ()=>window.print());
+  $('#btnCopyRFQ_en').addEventListener('click', ()=>{
+    const msg = `Request: Wet-blue tagging station (chemical-resistant removable tags + plastic fastener)\n- Mode: ${store.mode||'semi'}\n- Takt: ${($('#ct_en').value)}s/pc, Stations: ${($('#st_en').value)}, FPY: ${($('#fp_en').value)}\n- MES: REST/MQTT, log Piece-ID/time/position/result\nPlease quote printer + fastener head + vision scanner + PLC/HMI.`;
+    navigator.clipboard?.writeText(msg).then(()=> alert('Copied RFQ points'));
+  });
+})();
+</script>
+</body>
+</html>
