@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>蓝湿皮｜耐化学可移除标签＋机械固定（iOS UI）</title>
+<title>蓝湿皮｜耐化学可移除标签＋机械固定（iOS UI · v3）</title>
 <style>
   :root{
     --bg:#ffffff; --panel:#f5f6f7; --card:#ffffff; --muted:#6b7280;
@@ -40,22 +40,17 @@
   .sub{ color:var(--muted); margin:6px 2px 0; font-size:14px }
   .chips{ display:flex; gap:8px; overflow:auto; padding:10px 2px 0; -webkit-overflow-scrolling: touch }
   .chip{ flex:0 0 auto; border:1px solid var(--border); color:var(--muted); padding:6px 10px; border-radius:999px; font-size:12px; background:var(--card) }
-
   section{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:14px; margin-top:12px; box-shadow:var(--shadow) }
   h2{ margin:0 0 10px; font-size:19px; font-weight:700 }
   .muted{ color:var(--muted) }
   .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center }
   .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; height:var(--tap);
-        padding:0 16px; border-radius:12px; border:1px solid var(--border); background:var(--card); color:var(--fg); text-decoration:none; min-width:44px }
+        padding:0 16px; border-radius:12px; border:1px solid var(--border); background:var(--card); color:var(--fg); text-decoration:none; min-width:44px; cursor:pointer }
   .btn.primary{ background:var(--acc); color:#fff; border-color:var(--acc) }
   .btn:active{ transform: translateY(1px) }
-
-  /* iOS segmented control */
   .seg{ display:flex; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--panel) }
-  .seg button{ flex:1; height:44px; border:0; background:transparent; color:var(--muted); font-weight:600 }
+  .seg button{ flex:1; height:44px; border:0; background:transparent; color:var(--muted); font-weight:600; cursor:pointer }
   .seg button.active{ background:#fff; color:var(--fg); box-shadow: inset 0 0 0 2px var(--acc) }
-
-  /* inputs & sliders tuned for Safari */
   input[type="number"], input[type="text"]{
     -webkit-appearance: none; appearance:none;
     background:var(--panel); color:var(--fg); border:1px solid var(--border);
@@ -65,29 +60,21 @@
   input[type="range"]::-webkit-slider-runnable-track{ height:6px; background:var(--panel); border:1px solid var(--border); border-radius:999px }
   input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; height:28px; width:28px; margin-top:-11px; background:#fff; border:2px solid var(--acc); border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,.15) }
   label{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:10px 0 }
-
   .kpi{ display:flex; align-items:baseline; gap:8px; padding:10px 12px; border-radius:12px; background:var(--panel); border:1px solid var(--border) }
   .kpi strong{ font-size:22px }
   .ok{ color:var(--ok) } .warn{ color:var(--warn) } .danger{ color:var(--danger) }
   details{ border:1px solid var(--border); border-radius:12px; background:var(--panel); padding:10px; margin:8px 0 }
   details > summary{ cursor:pointer; list-style:none; outline:none; font-weight:700 }
   details > summary::-webkit-details-marker{ display:none }
-
-  /* BOM */
   .bom{ width:100%; border-collapse: collapse; }
   .bom th,.bom td{ border:1px solid var(--border); padding:10px; text-align:left; font-size:15px; background:var(--card) }
   .bom input[type="number"]{ width:90px }
-
-  /* bottom Tab Bar with safe-area */
   .nav{ position:fixed; left:0; right:0; bottom:0; height:calc(62px + env(safe-area-inset-bottom));
         padding-bottom: env(safe-area-inset-bottom); background:var(--card); border-top:1px solid var(--border); display:flex; z-index:20 }
   .nav a{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); text-decoration:none; gap:4px; font-size:12px }
   .nav a.active{ color:var(--acc) }
-
-  /* language blocks */
   [data-lang]{ display:none }
   [data-lang].active{ display:block }
-
   .float-top{ position:fixed; right:12px; bottom:calc(82px + env(safe-area-inset-bottom)); z-index:30 }
 </style>
 </head>
@@ -111,7 +98,7 @@
         <div class="chip" data-i18n="chip4">304/316 可选</div>
       </div>
       <div class="row" style="margin-top:8px">
-        <a class="btn primary" id="btnMore">阅读全文</a>
+        <button class="btn primary" id="btnMore">阅读全文</button>
       </div>
     </header>
 
@@ -162,6 +149,15 @@
         </details>
       </section>
 
+      <!-- Options -->
+      <section id="opts">
+        <h2>选配（自动计价）</h2>
+        <label><span>进口 2D 读码器（增配）</span><input id="optReader" type="checkbox"></label>
+        <p class="muted">勾选后自动增加差价 ¥6,000（在 BOM 中单独显示为“进口 2D 读码器（增配）”）</p>
+        <label><span>SS316 机架升级</span><input id="opt316" type="checkbox"></label>
+        <p class="muted">勾选后自动增加差价 ¥4,000（在 BOM 中显示为“SS316 机架升级（差价）”）</p>
+      </section>
+
       <section id="calc">
         <h2>产能计算器</h2>
         <div>
@@ -173,10 +169,10 @@
           <input id="fpR" type="range" min="0.9" max="1" step="0.005" value="0.995" aria-label="首读率滑块">
           <label>目标产能（张/小时）<input id="target" type="number" min="100" step="50" value="800"></label>
           <div class="row" style="margin-top:8px">
-            <a class="btn primary" id="btnCalc">计算</a>
-            <a class="btn" id="btnReset">重置</a>
-            <a class="btn" id="btnPrint">打印/导出</a>
-            <a class="btn" id="btnCopyRFQ">复制询价要点</a>
+            <button class="btn primary" id="btnCalc">计算</button>
+            <button class="btn" id="btnReset">重置</button>
+            <button class="btn" id="btnPrint">打印/导出</button>
+            <button class="btn" id="btnCopyRFQ">复制询价要点</button>
           </div>
           <div id="out" class="muted" style="margin-top:8px"></div>
         </div>
@@ -185,9 +181,9 @@
       <section id="bom">
         <h2>BOM 勾选清单</h2>
         <div class="row" style="margin-bottom:8px">
-          <a class="btn" id="bomAll">全选</a>
-          <a class="btn" id="bomNone">清空</a>
-          <a class="btn" id="bomCopy">复制清单</a>
+          <button class="btn" id="bomAll">全选</button>
+          <button class="btn" id="bomNone">清空</button>
+          <button class="btn" id="bomCopy">复制清单</button>
         </div>
         <div style="overflow:auto">
           <table class="bom" id="bomTable" aria-label="BOM">
@@ -227,26 +223,13 @@
         <p class="muted" id="modeNote_en">Start with semi-auto; upgrade to full-auto later.</p>
       </section>
 
-      <section id="flow_en">
-        <h2>Flow & Units</h2>
-        <details open>
-          <summary>A. Print / dispense</summary>
-          <ul class="muted">
-            <li>Industrial TT 300/600 dpi (resin ribbon), peel plate + sensor</li>
-            <li>Template with short ID & QR (V1/V2)</li>
-          </ul>
-        </details>
-        <details><summary>B. Pick & place</summary><ul class="muted"><li>Vacuum pad / sponge; optional tag-only pre-punch</li></ul></details>
-        <details><summary>C. Pierce & fasten</summary><ul class="muted"><li>Servo-Z (0.4–1.0 kN) + force; pneumatic T-tag gun; UHMW-PE anvil</li></ul></details>
-        <details><summary>D. Scan / MES</summary><ul class="muted"><li>Fixed 2D reader ≥99.5% FPY; NG reprint/bypass; MES logs Piece-ID/XY/shift</li></ul></details>
-        <details id="moreEn" style="display:none">
-          <summary>More (materials / safety / constraints)</summary>
-          <ul class="muted">
-            <li>SS304 frame (SS316 optional); IP54 electrical</li>
-            <li>Fasten ≥15–20 mm from edge; no metal staples</li>
-            <li>Offline queue & event logs</li>
-          </ul>
-        </details>
+      <!-- Options EN -->
+      <section id="opts_en">
+        <h2>Options (auto pricing)</h2>
+        <label><span>Imported 2D reader (upgrade)</span><input id="optReader_en" type="checkbox"></label>
+        <p class="muted">Adds ¥6,000 as a surcharge (listed in BOM as “Imported 2D reader (upgrade)”).</p>
+        <label><span>SS316 frame upgrade</span><input id="opt316_en" type="checkbox"></label>
+        <p class="muted">Adds ¥4,000 as a surcharge (listed in BOM as “SS316 frame upgrade (surcharge)”).</p>
       </section>
 
       <section id="calc_en">
@@ -260,10 +243,10 @@
           <input id="fpR_en" type="range" min="0.9" max="1" step="0.005" value="0.995" aria-label="fpy slider">
           <label>Target (pcs/h)<input id="target_en" type="number" min="100" step="50" value="800"></label>
           <div class="row" style="margin-top:8px">
-            <a class="btn primary" id="btnCalc_en">Calculate</a>
-            <a class="btn" id="btnReset_en">Reset</a>
-            <a class="btn" id="btnPrint_en">Print/Export</a>
-            <a class="btn" id="btnCopyRFQ_en">Copy RFQ points</a>
+            <button class="btn primary" id="btnCalc_en">Calculate</button>
+            <button class="btn" id="btnReset_en">Reset</button>
+            <button class="btn" id="btnPrint_en">Print/Export</button>
+            <button class="btn" id="btnCopyRFQ_en">Copy RFQ points</button>
           </div>
           <div id="out_en" class="muted" style="margin-top:8px"></div>
         </div>
@@ -272,9 +255,9 @@
       <section id="bom_en">
         <h2>BOM Checklist</h2>
         <div class="row" style="margin-bottom:8px">
-          <a class="btn" id="bomAll_en">Select all</a>
-          <a class="btn" id="bomNone_en">Clear</a>
-          <a class="btn" id="bomCopy_en">Copy list</a>
+          <button class="btn" id="bomAll_en">Select all</button>
+          <button class="btn" id="bomNone_en">Clear</button>
+          <button class="btn" id="bomCopy_en">Copy list</button>
         </div>
         <div style="overflow:auto">
           <table class="bom" id="bomTable_en" aria-label="BOM">
@@ -298,7 +281,7 @@
       </section>
     </div>
 
-    <a class="btn float-top" id="btnTop">↑ 顶部 / Top</a>
+    <button class="btn float-top" id="btnTop">↑ 顶部 / Top</button>
   </div>
 
   <!-- iOS-like Tab Bar -->
@@ -311,17 +294,19 @@
 <script>
 (function(){
   const $ = s => document.querySelector(s);
-  const store = JSON.parse(localStorage.getItem('ios_tag_cfg')||'{}');
-  let moreOpen = false; // controls Read more
+  let store = {};
+  try{ store = JSON.parse(localStorage.getItem('ios_tag_cfg')||'{}'); }catch(e){ store = {}; }
+  let opts = {};
+  try{ opts = JSON.parse(localStorage.getItem('ios_opts')||'{}'); }catch(e){ opts = {}; }
+  let moreOpen = false;
 
-  // Copy or Share helper (iOS share first)
+  // Copy / Share
   function shareOrCopy(text, title='Info'){
     if (navigator.share){
-      return navigator.share({title, text}).catch(()=>copyFallback());
+      return navigator.share({title, text}).catch(()=>copyText(text));
     } else {
       return copyText(text);
     }
-    function copyFallback(){ return copyText(text); }
   }
   function copyText(msg){
     if (navigator.clipboard && window.isSecureContext){
@@ -368,34 +353,31 @@
     document.body.setAttribute('lang', l==='zh'?'zh-CN':'en');
     localStorage.setItem('ios_lang', l);
     $('#btnMore').textContent = moreOpen ? d.moreBtn[1] : d.moreBtn[0];
-    // update bottom nav targets
-    $('#nvMode').href = d.nav[0];
-    $('#nvCalc').href = d.nav[1];
-    $('#nvAcc').href = d.nav[2];
+    // bottom nav targets
+    $('#nvMode').href = d.nav[0]; $('#nvCalc').href = d.nav[1]; $('#nvAcc').href = d.nav[2];
   }
   const savedLang = localStorage.getItem('ios_lang')||'zh';
   langZh.addEventListener('click', ()=>applyLang('zh'));
   langEn.addEventListener('click', ()=>applyLang('en'));
   applyLang(savedLang);
 
-  // Read more toggle
+  // Read more
   const moreZh = $('#moreZh'), moreEn = $('#moreEn');
   $('#btnMore').addEventListener('click', ()=>{
     moreOpen = !moreOpen;
-    moreZh.style.display = moreOpen?'block':'none';
-    moreEn.style.display = moreOpen?'block':'none';
+    moreZh && (moreZh.style.display = moreOpen?'block':'none');
+    moreEn && (moreEn.style.display = moreOpen?'block':'none');
     const l = localStorage.getItem('ios_lang')||'zh';
-    const d = dict[l];
-    $('#btnMore').textContent = moreOpen? d.moreBtn[1] : d.moreBtn[0];
+    $('#btnMore').textContent = dict[l].moreBtn[ moreOpen?1:0 ];
   });
 
   // Mode & Calculator (ZH)
   const semi = $('#mSemi'), full = $('#mFull');
   const kpiCt = $('#kpiCt'), kpiTPH = $('#kpiTPH'), modeNote = $('#modeNote');
-  const ct = $('#ct'), ctR = $('#ctR'];
-  const stN = $('#st'), stR = $('#stR'];
-  const fp = $('#fp'), fpR = $('#fpR'];
-  const target = $('#target']);
+  const ct = $('#ct'), ctR = $('#ctR');
+  const stN = $('#st'), stR = $('#stR');
+  const fp = $('#fp'), fpR = $('#fpR');
+  const target = $('#target');
   const out = $('#out');
 
   function syncRange(num, rng){ rng.value = num.value; }
@@ -423,4 +405,10 @@
       modeNote.textContent = '半自动：打印/取贴/穿扣/扫码分步协作；上手快、投入低。';
       store.mode='semi';
     }
-    calc(); localStorage.setItem('ios_tag_cfg', JSON.stringify({mode:store.mode, ct:ct.value, st:stN.value, fp:fp.value, target:target
+    calc(); localStorage.setItem('ios_tag_cfg', JSON.stringify({mode:store.mode, ct:ct.value, st:stN.value, fp:fp.value, target:target.value}));
+  }
+  semi.addEventListener('click', ()=>applyMode('semi'));
+  full.addEventListener('click', ()=>applyMode('full'));
+
+  function calc(){
+    const c = Math.max(0.5, parse
